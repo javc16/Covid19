@@ -39,7 +39,7 @@ namespace Covid19.AppServices
         public async Task<Response> Post(Ciudadano ciudadano)
         {
             var SavedUser = await _context.Ciudadano.FirstOrDefaultAsync(r => r.numeroIdentidad == ciudadano.numeroIdentidad);
-            if (SavedUser.estado == 0)
+            if (SavedUser != null && SavedUser.estado == 0)
             {
                 SavedUser.estado = 1;
                 await Put(SavedUser);

@@ -38,7 +38,7 @@ namespace Covid19.AppServices
         public async Task<Response> Post(Direccion direccion)
         {
             var direccionGuardada = await _context.Direccion.FirstOrDefaultAsync(r => r.centroVacunacion == direccion.centroVacunacion);
-            if (direccionGuardada.estado == 0)
+            if (direccionGuardada != null && direccionGuardada.estado == 0)
             {
                 direccionGuardada.estado = 1;
                 await Put(direccionGuardada);

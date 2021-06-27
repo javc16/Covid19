@@ -20,13 +20,13 @@ namespace Covid19.AppServices
 
         public IEnumerable<ControlVacunas> GetAll()
         {
-            var controlVacunas = _context.ControlVacunas.Where(x => x.estado == 1);
+            var controlVacunas = _context.ControlVacunas.Include(e => e.ciudadano).Include(e => e.direccion).Where(x => x.estado == 1);
             return controlVacunas;
         }
 
         public async Task<Response> GetById(long id)
         {
-            var controlVacunas = await _context.ControlVacunas.FirstOrDefaultAsync(r => r.id == id);
+            var controlVacunas = await _context.ControlVacunas.Include(e => e.ciudadano).Include(e => e.direccion).FirstOrDefaultAsync(r => r.id == id);
             if (controlVacunas == null)
             {
                 return new Response { mensaje = "Este ciudadano no tiene asociado un control de vacunacion" };
@@ -38,7 +38,7 @@ namespace Covid19.AppServices
         public async Task<Response> Post(ControlVacunas controlVacunas)
         {
             var controlVacunasGuardado = await _context.ControlVacunas.FirstOrDefaultAsync(r => r.ciudadano == controlVacunas.ciudadano);
-            if (controlVacunasGuardado.estado == 0)
+            if (controlVacunasGuardado != null && controlVacunasGuardado.estado == 0)
             {
                 controlVacunasGuardado.estado = 1;
                 await Put(controlVacunasGuardado);
@@ -48,9 +48,11 @@ namespace Covid19.AppServices
             {
                 return new Response { mensaje = "Este ciudadano ya posee un control de vacunas en el sistema" };
             }
-
-
-            _context.ControlVacunas.Add(controlVacunasGuardado);
+            var ciudadano = await _context.Ciudadano.FirstOrDefaultAsync(x => x.id == controlVacunas.idCiudadano);
+            var direccion = await _context.Direccion.FirstOrDefaultAsync(x => x.id == controlVacunas.idDireccion);
+            controlVacunas.ciudadano = ciudadano;
+            controlVacunas.direccion = direccion;
+            _context.ControlVacunas.Add(controlVacunas);
             await _context.SaveChangesAsync();
             return new Response { mensaje = $"Control de Vacunas para el ciudadano {controlVacunas.ciudadano.nombre} con id {controlVacunas.ciudadano.numeroIdentidad} agregado correctamente" };
         }
